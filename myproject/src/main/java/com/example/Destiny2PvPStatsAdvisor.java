@@ -1,5 +1,6 @@
 package com.example;
 
+// imports for app
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -8,20 +9,29 @@ import java.net.http.HttpResponse;
 import java.util.Scanner;
 import org.json.JSONObject;
 
+// imports for github/quality of life
 import io.github.cdimascio.dotenv.Dotenv;
+
 
 public class Destiny2PvPStatsAdvisor {
 
+    // initialize environmental vars via .env file to protect API key
     private static final Dotenv dotenv = Dotenv.load();
     private static final String API_KEY = dotenv.get("BUNGIE_API_KEY");
 
     public static void main(String[] args) {
+
+        // print key to check env works, debugging
         System.out.println("API Key: " + API_KEY);
         
+        // init scanner to get user account
         Scanner scanner = new Scanner(System.in);
+
+        // scan for account details
         System.out.println("Please enter your Bungie.net Destiny 2 profile URL:");
         String inputUrl = scanner.nextLine();
 
+        // get player's account info from scanner, store to string array
         try {
             String[] extractedParams = extractParameters(inputUrl);
             String membershipType = extractedParams[0];
@@ -29,16 +39,23 @@ public class Destiny2PvPStatsAdvisor {
 
             JSONObject stats = fetchPvPStats(membershipType, destinyMembershipId);
             provideGameplaySuggestions(stats);
-        } catch (Exception e) {
+        } 
+        
+        // get error, print to output
+        catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
         }
     }
 
+    // get account info from user provided link
     private static String[] extractParameters(String url) {
+
+        // declare the pattern that account info URL stores account info
         String pattern = "https://www\\.bungie\\.net/\\d+/en/User/Profile/(\\d+)/(\\d+)";
         java.util.regex.Pattern r = java.util.regex.Pattern.compile(pattern);
         java.util.regex.Matcher m = r.matcher(url);
 
+        // find data within the pattern
         if (m.find()) {
             return new String[] { m.group(1), m.group(2) };
         } else {
@@ -46,34 +63,42 @@ public class Destiny2PvPStatsAdvisor {
         }
     }
 
+    // make an API request from the data above
     private static JSONObject fetchPvPStats(String membershipType, String destinyMembershipId)
             throws IOException, InterruptedException {
         String endpoint = String.format("https://www.bungie.net/Platform/Destiny2/%s/Account/%s/Character/0/Stats/",
                 membershipType, destinyMembershipId);
+
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(endpoint))
                 .header("X-API-Key", API_KEY)
                 .build();
 
+        // store API response to JSONObject and return
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         return new JSONObject(response.body());
     }
 
+    // do things based off response
     private static void provideGameplaySuggestions(JSONObject stats) {
+        // narrow json by plaver vs player stats 
         JSONObject allPvP = stats.getJSONObject("Response").getJSONObject("allPvP").getJSONObject("allTime");
-        
+
+        // store stats of interest
         double averageKillDistance = allPvP.getJSONObject("averageKillDistance").getJSONObject("basic").getDouble("value");
         double averageLifespan = allPvP.getJSONObject("averageLifespan").getJSONObject("basic").getDouble("value");
         double killsDeathsRatio = allPvP.getJSONObject("killsDeathsRatio").getJSONObject("basic").getDouble("value");
         double winLossRatio = allPvP.getJSONObject("winLossRatio").getJSONObject("basic").getDouble("value");
     
+        // display data
         System.out.println("Gameplay Statistics:");
         System.out.println("Average Kill Distance: " + averageKillDistance);
         System.out.println("Average Lifespan: " + averageLifespan);
         System.out.println("Kills/Deaths Ratio: " + killsDeathsRatio);
         System.out.println("Win/Loss Ratio: " + winLossRatio);
-    
+
+        // suggest things based off strengths and weaknesses
         if (averageKillDistance < 10) {
             System.out.println("Try to engage at longer distances to improve safety and efficiency.");
         } else if (averageKillDistance >= 10 && averageKillDistance <= 20) {
