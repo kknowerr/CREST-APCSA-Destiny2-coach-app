@@ -106,14 +106,6 @@ public class Destiny2PvPStatsAdvisor {
         } else {
             System.out.println("Great job on maintaining a safe engagement distance!");
         }
-            
-        if (averageKillDistance < 10) {
-            System.out.println("Try to engage at longer distances to improve safety and efficiency.");
-        } else if (averageKillDistance >= 10 && averageKillDistance <= 20) {
-            System.out.println("Your engagement distance is average, consider practicing your precision aiming.");
-        } else {
-            System.out.println("Great job on maintaining a safe engagement distance!");
-        }
 
         if (averageLifespan < 60) {
             System.out.println("Work on your positioning and map awareness to stay alive longer.");
